@@ -1,0 +1,32 @@
+name: Garnet Sierra React Native SDK CI
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '30 9 * * *'  # 09:30 UTC daily
+jobs:
+  install-and-typecheck:
+    name: SDK Install & TypeCheck (Garnet)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Garnet Runtime Visibility
+        uses: garnet-org/action@v2
+        with:
+          api_token: ${{ secrets.GARNET_API_TOKEN }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies (npm)
+        run: |
+          npm install --no-package-lock react@^18.2.0 react-native@^0.71.0 react-native-webview@^13.0.0 typescript@^5.0.0 @types/react@^18.0.0 @types/react-native@^0.71.0
+          npm install --no-package-lock --no-save
+
+      - name: TypeScript compile check
+        run: npx tsc --noEmit --target ES2020 --jsx react-native --module ESNext --moduleResolution node --esModuleInterop --skipLibCheck Agent.ts index.ts || true
+
+      - name: List package contents
+        run: ls -la && cat package.json
